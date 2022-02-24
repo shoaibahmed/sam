@@ -44,7 +44,7 @@ class NoisedSAM(torch.optim.Optimizer):
                 # Add perturbation in the weights governed by the rho value
                 scale = group["random_rho"] / (grad_norm + 1e-12)
                 e_w = p.data * scale.to(p.data)
-                p.data = self.state[p]["old_p"]  # get back to "w" from "delta"
+                p.data = self.state[p]["old_p"].clone()  # get back to "w" from "delta"
                 p.add_(e_w)  # climb to the random point within l_2 norm ball "w + delta"
         
         if zero_grad: self.zero_grad()
@@ -57,6 +57,7 @@ class NoisedSAM(torch.optim.Optimizer):
 
             for p in group["params"]:
                 if p.grad is None: continue
+                # self.state[p]["old_p"] = p.data.clone()
                 e_w = (torch.pow(p, 2) if group["adaptive"] else 1.0) * p.grad * scale.to(p)
                 p.add_(e_w)  # climb to the local maximum "w + e(w)"
 
